@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jurnal Guru Cloud - Laporan Bulanan</title>
+    <title>Jurnal Guru Cloud - Login Google</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -12,7 +12,6 @@
         body { font-family: 'Inter', sans-serif; }
         .loader { border-top-color: #4f46e5; animation: spinner 0.6s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-20">
@@ -20,149 +19,133 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white z-[60] flex flex-col items-center justify-center">
         <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-12 w-12 mb-4"></div>
-        <div id="status-container" class="text-center px-4">
-            <p id="status-text" class="text-slate-600 font-medium">Menghubungkan ke Cloud Database...</p>
+        <p class="text-slate-600 font-medium">Menyiapkan Sinkronisasi...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-indigo-600 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+            <div class="bg-indigo-100 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">Selamat Datang</h2>
+            <p class="text-slate-500 mb-8 text-sm">Masuk dengan akun Google untuk sinkronisasi jurnal di semua perangkat Anda.</p>
+            <button id="btn-login" class="w-full flex items-center justify-center space-x-3 bg-white border border-slate-200 py-3 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm active:scale-95">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
+                <span>Masuk dengan Google</span>
+            </button>
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="bg-indigo-600 text-white shadow-lg no-print sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span class="text-xl font-bold tracking-tight">JurnalGuru</span>
+    <!-- App Content (Hidden until login) -->
+    <div id="app-content" class="hidden">
+        <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl font-bold tracking-tight">JurnalGuru</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div id="user-info" class="hidden md:flex items-center space-x-2 mr-2 border-r border-indigo-400 pr-4">
+                        <img id="user-photo" class="w-8 h-8 rounded-full border-2 border-white/20">
+                        <span id="user-name" class="text-xs font-semibold"></span>
+                    </div>
+                    <button onclick="toggleExportModal()" class="bg-indigo-500 hover:bg-indigo-400 p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition">Ekspor</button>
+                    <button onclick="openModal()" class="bg-white text-indigo-600 p-2 md:px-4 md:py-2 rounded-lg font-bold hover:bg-indigo-50 transition shadow-md">Tambah</button>
+                    <button id="btn-logout" class="text-indigo-200 hover:text-white transition p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    </button>
+                </div>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="toggleExportModal()" class="bg-indigo-500 hover:bg-indigo-400 px-4 py-2 rounded-lg text-sm font-semibold transition">Ekspor Bulanan</button>
-                <button onclick="openModal()" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold hover:bg-indigo-50 transition shadow-md">Tambah Data</button>
-            </div>
-        </div>
-    </nav>
+        </nav>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Dashboard Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg></div>
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Jurnal</p>
+                        <h2 id="total-entries" class="text-3xl font-black text-slate-800 tracking-tight">0</h2>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Data Tersimpan</p>
-                    <h2 id="total-entries" class="text-3xl font-black text-slate-800 tracking-tight">0</h2>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="bg-green-100 p-3 rounded-xl text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Penyimpanan Cloud</p>
-                    <h2 class="text-xl font-black text-green-600 flex items-center">
-                        Sinkron Aktif
-                        <span class="flex h-2 w-2 ml-2">
-                            <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                    </h2>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-green-100 p-3 rounded-xl text-green-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg></div>
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Akun Aktif</p>
+                        <h2 id="active-account" class="text-sm font-bold text-green-600 truncate max-w-[200px]">Memuat...</h2>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b bg-slate-50/50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-700">Daftar Jurnal Mengajar</h3>
-                <span class="text-xs text-slate-400 italic">Data otomatis tersimpan di Cloud</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 border-b">
-                        <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hari/Tanggal</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">KBM</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Materi Pokok</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="jurnal-list" class="divide-y divide-slate-100"></tbody>
-                </table>
-            </div>
-            <div id="empty-state" class="hidden p-20 text-center">
-                <div class="bg-slate-50 inline-block p-6 rounded-full mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
-                    </svg>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hari/Tanggal</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">KBM</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Materi Pokok</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jurnal-list" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
-                <p class="text-slate-500 font-medium">Belum ada jurnal yang tercatat.</p>
-                <p class="text-sm text-slate-400">Silakan tambah data untuk mulai menyimpan.</p>
+                <div id="empty-state" class="hidden p-20 text-center">
+                    <p class="text-slate-500 font-medium">Belum ada jurnal yang tercatat di akun ini.</p>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- Modal Input -->
+    <!-- Modals (Same as before but with minor UI improvements) -->
     <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen bg-slate-900 bg-opacity-80 p-4" onclick="closeModal()">
             <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-lg" onclick="event.stopPropagation()">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-black text-slate-800 tracking-tight">Jurnal Baru</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition text-2xl">&times;</button>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
                 </div>
-                <form id="jurnal-form" class="space-y-5">
+                <form id="jurnal-form" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Tanggal Mengajar</label>
-                        <input type="date" id="date" required class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition">
+                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Tanggal</label>
+                        <input type="date" id="date" required class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Kelas</label>
-                            <input type="text" id="class_name" placeholder="X-IPA 1" required class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none">
+                            <input type="text" id="class_name" placeholder="X-IPA 1" required class="w-full border border-slate-200 p-3 rounded-2xl">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Mapel</label>
-                            <input type="text" id="subject" placeholder="Matematika" required class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none">
+                            <input type="text" id="subject" placeholder="Matematika" required class="w-full border border-slate-200 p-3 rounded-2xl">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Materi Pokok</label>
-                        <input type="text" id="topic" placeholder="Materi yang diajarkan" required class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none">
+                        <input type="text" id="topic" placeholder="Judul Materi" required class="w-full border border-slate-200 p-3 rounded-2xl">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Catatan Tambahan</label>
-                        <textarea id="notes" rows="3" placeholder="Siswa yang tidak hadir, kendala, dll." class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none"></textarea>
+                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Catatan</label>
+                        <textarea id="notes" rows="3" class="w-full border border-slate-200 p-3 rounded-2xl"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-xl shadow-indigo-200 transition transform active:scale-95">Simpan ke Cloud</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-xl transition active:scale-95">Simpan</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal Ekspor Bulanan -->
     <div id="export-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen bg-slate-900 bg-opacity-80 p-4" onclick="toggleExportModal()">
             <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md" onclick="event.stopPropagation()">
-                <div class="mb-6 text-center">
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Ekspor Laporan</h3>
-                    <p class="text-sm text-slate-500">Pilih periode laporan bulanan Anda</p>
-                </div>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight text-center mb-6">Ekspor PDF</h3>
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Bulan</label>
-                            <select id="export-month" class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none transition bg-white">
-                                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
-                                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
-                                <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
-                                <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Tahun</label>
-                            <select id="export-year" class="w-full border border-slate-200 p-3 rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none transition bg-white"></select>
-                        </div>
+                        <select id="export-month" class="border p-3 rounded-2xl bg-white"></select>
+                        <select id="export-year" class="border p-3 rounded-2xl bg-white"></select>
                     </div>
-                    <button onclick="handleExportPDF()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-lg transition">Unduh PDF</button>
-                    <button onclick="toggleExportModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-2xl font-semibold transition">Batal</button>
+                    <button onclick="handleExportPDF()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg">Unduh PDF</button>
                 </div>
             </div>
         </div>
@@ -170,60 +153,54 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // TEMPELKAN KONFIGURASI FIREBASE ANDA DI SINI
+        // KONFIGURASI FIREBASE ANDA
         // ==========================================
         const firebaseConfig = {
-              apiKey: "AIzaSyAlXDVBSJryVlGwtZWYL_BNnh6-7R-SbXk",
-  authDomain: "jurnal-guru-f06df.firebaseapp.com",
-  projectId: "jurnal-guru-f06df",
-  storageBucket: "jurnal-guru-f06df.firebasestorage.app",
-  messagingSenderId: "782875410114",
-  appId: "1:782875410114:web:777745840dec5b9c16055b",
-  measurementId: "G-GT043JMH9S"
+            apiKey: "SALIN_API_KEY_ANDA",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "ID_SENDER",
+            appId: "APP_ID_ANDA"
         };
         // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
 
         let user = null;
         let currentData = [];
+        const idFormatter = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        // Inisialisasi Tahun Ekspor
-        const yearSelect = document.getElementById('export-year');
-        const currentYear = new Date().getFullYear();
-        for(let i = currentYear; i >= currentYear - 5; i--) {
-            const opt = document.createElement('option');
-            opt.value = i; opt.innerHTML = i;
-            yearSelect.appendChild(opt);
-        }
-        document.getElementById('export-month').value = new Date().getMonth();
-
-        // Indonesia Date Formatter
-        const idFormatter = new Intl.DateTimeFormat('id-ID', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-
-        const monthName = (m) => ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][m];
-
-        // Auth handling
-        signInAnonymously(auth).catch(err => {
-            document.getElementById('status-text').innerHTML = `<span class="text-red-600">Gagal terhubung. Pastikan Auth Anonymous Aktif.</span>`;
-        });
+        // Auth Logic
+        document.getElementById('btn-login').onclick = () => {
+            signInWithPopup(auth, provider).catch(e => alert("Gagal Login: " + e.message));
+        };
+        document.getElementById('btn-logout').onclick = () => {
+            if(confirm("Keluar dari akun?")) signOut(auth);
+        };
 
         onAuthStateChanged(auth, (u) => {
+            document.getElementById('loading-overlay').classList.add('hidden');
             if (u) {
                 user = u;
-                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                document.getElementById('active-account').textContent = u.email;
+                document.getElementById('user-name').textContent = u.displayName;
+                document.getElementById('user-photo').src = u.photoURL;
+                document.getElementById('user-info').classList.remove('hidden');
                 loadData();
+            } else {
+                user = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('hidden');
             }
         });
 
@@ -241,119 +218,75 @@
             const list = document.getElementById('jurnal-list');
             const empty = document.getElementById('empty-state');
             document.getElementById('total-entries').textContent = data.length;
-
             if (data.length === 0) empty.classList.remove('hidden'); else empty.classList.add('hidden');
             
-            list.innerHTML = data.map(item => {
-                const d = new Date(item.date);
-                return `
-                    <tr class="group hover:bg-slate-50 transition border-transparent hover:border-slate-200 border-l-4">
-                        <td class="px-6 py-5">
-                            <div class="text-sm font-semibold text-slate-700">${idFormatter.format(d)}</div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 mb-1">${item.class_name}</div>
-                            <div class="text-xs text-slate-500 font-medium">${item.subject}</div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="text-sm text-slate-600 line-clamp-1">${item.topic}</div>
-                        </td>
-                        <td class="px-6 py-5 text-right">
-                            <button onclick="hapus('${item.id}')" class="opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-500 p-2 rounded-xl transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            list.innerHTML = data.map(item => `
+                <tr class="group hover:bg-slate-50 transition border-l-4 border-transparent hover:border-indigo-400">
+                    <td class="px-6 py-5 text-sm font-semibold text-slate-700">${idFormatter.format(new Date(item.date))}</td>
+                    <td class="px-6 py-5">
+                        <div class="text-xs font-bold text-indigo-700 bg-indigo-50 inline-block px-2 py-0.5 rounded-full mb-1">${item.class_name}</div>
+                        <div class="text-xs text-slate-500">${item.subject}</div>
+                    </td>
+                    <td class="px-6 py-5 text-sm text-slate-600">${item.topic}</td>
+                    <td class="px-6 py-5 text-right">
+                        <button onclick="hapus('${item.id}')" class="text-red-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        // Action Functions
-        window.openModal = () => {
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        };
+        // Global Window Functions
+        window.openModal = () => { document.getElementById('modal').classList.remove('hidden'); document.getElementById('date').value = new Date().toISOString().split('T')[0]; };
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
         window.toggleExportModal = () => document.getElementById('export-modal').classList.toggle('hidden');
+        window.hapus = async (id) => { if(confirm('Hapus selamanya dari Cloud?')) await deleteDoc(doc(db, 'jurnal_guru', user.uid, 'entries', id)); };
 
-        window.hapus = async (id) => {
-            if(confirm('Hapus data ini secara permanen dari Cloud?')) {
-                await deleteDoc(doc(db, 'jurnal_guru', user.uid, 'entries', id));
-            }
-        };
+        // Export & Init Year
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const mSel = document.getElementById('export-month');
+        const ySel = document.getElementById('export-year');
+        monthNames.forEach((m, i) => mSel.innerHTML += `<option value="${i}">${m}</option>`);
+        for(let i=2025; i<=2030; i++) ySel.innerHTML += `<option value="${i}">${i}</option>`;
+        mSel.value = new Date().getMonth();
+        ySel.value = new Date().getFullYear();
 
         window.handleExportPDF = () => {
-            const m = parseInt(document.getElementById('export-month').value);
-            const y = parseInt(document.getElementById('export-year').value);
-            
-            const filtered = currentData.filter(item => {
-                const d = new Date(item.date);
-                return d.getMonth() === m && d.getFullYear() === y;
-            }).sort((a,b) => new Date(a.date) - new Date(b.date)); // Sort asc for report
+            const m = parseInt(mSel.value);
+            const y = parseInt(ySel.value);
+            const filtered = currentData.filter(i => { const d = new Date(i.date); return d.getMonth() === m && d.getFullYear() === y; }).sort((a,b) => new Date(a.date) - new Date(b.date));
+            if(!filtered.length) return alert("Data tidak ditemukan untuk bulan ini");
 
-            if(filtered.length === 0) return alert('Tidak ada data pada bulan ' + monthName(m) + ' ' + y);
+            const docPDF = new jspdf.jsPDF('p', 'mm', 'a4');
+            docPDF.setFontSize(14).setFont(undefined, 'bold').text('LAPORAN JURNAL MENGAJAR', 105, 15, {align:'center'});
+            docPDF.setFontSize(10).setFont(undefined, 'normal').text(`Nama: ${user.displayName} | Bulan: ${monthNames[m]} ${y}`, 105, 22, {align:'center'});
             
-            const { jsPDF } = window.jspdf;
-            const docPDF = new jsPDF('p', 'mm', 'a4');
-            
-            docPDF.setFontSize(14);
-            docPDF.setFont('helvetica', 'bold');
-            docPDF.text('LAPORAN JURNAL MENGAJAR GURU', 105, 15, { align: 'center' });
-            
-            docPDF.setFontSize(11);
-            docPDF.setFont('helvetica', 'normal');
-            docPDF.text(`Bulan: ${monthName(m)} ${y}`, 105, 22, { align: 'center' });
-            
-            const tableRows = filtered.map((item, i) => {
-                const d = new Date(item.date);
-                const tgl = d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
-                return [i + 1, tgl, item.class_name, item.subject, item.topic, item.notes || '-'];
-            });
-
             docPDF.autoTable({
-                head: [['No', 'Tanggal', 'Kelas', 'Mapel', 'Materi Pokok', 'Keterangan']],
-                body: tableRows,
-                startY: 30,
-                styles: { fontSize: 9 },
-                headStyles: { fillColor: [79, 70, 229], halign: 'center' },
-                columnStyles: {
-                    0: { halign: 'center', cellWidth: 10 },
-                    1: { halign: 'center', cellWidth: 25 },
-                    2: { halign: 'center', cellWidth: 20 },
-                    3: { cellWidth: 30 },
-                    4: { cellWidth: 50 }
-                }
+                head: [['No', 'Tanggal', 'Kelas', 'Mapel', 'Materi', 'Catatan']],
+                body: filtered.map((it, idx) => [idx+1, it.date, it.class_name, it.subject, it.topic, it.notes || '-']),
+                startY: 30, headStyles: {fillColor: [79, 70, 229]}
             });
-
-            docPDF.save(`Laporan_Jurnal_${monthName(m)}_${y}.pdf`);
+            docPDF.save(`Jurnal_${monthNames[m]}_${y}.pdf`);
             toggleExportModal();
         };
 
         document.getElementById('jurnal-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
-            btn.disabled = true;
-            btn.textContent = 'Menyimpan...';
-
-            const entry = {
-                date: document.getElementById('date').value,
-                class_name: document.getElementById('class_name').value,
-                subject: document.getElementById('subject').value,
-                topic: document.getElementById('topic').value,
-                notes: document.getElementById('notes').value,
-                createdAt: new Date().toISOString()
-            };
-
+            btn.disabled = true; btn.textContent = 'Menyimpan...';
             try {
-                await addDoc(collection(db, 'jurnal_guru', user.uid, 'entries'), entry);
-                closeModal();
-                e.target.reset();
-            } catch(e) {
-                alert('Gagal simpan: ' + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Simpan ke Cloud';
-            }
+                await addDoc(collection(db, 'jurnal_guru', user.uid, 'entries'), {
+                    date: document.getElementById('date').value,
+                    class_name: document.getElementById('class_name').value,
+                    subject: document.getElementById('subject').value,
+                    topic: document.getElementById('topic').value,
+                    notes: document.getElementById('notes').value,
+                    createdAt: new Date().toISOString()
+                });
+                closeModal(); e.target.reset();
+            } catch(err) { alert(err.message); }
+            btn.disabled = false; btn.textContent = 'Simpan';
         };
     </script>
 </body>
