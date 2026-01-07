@@ -37,7 +37,6 @@
             <p class="text-slate-500 mb-8 text-sm">Gunakan akun Google agar data tersimpan aman dan sinkron antar perangkat.</p>
             
             <button id="btn-login" class="w-full flex items-center justify-center space-x-3 bg-white border border-slate-200 py-3 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm active:scale-95 disabled:opacity-50">
-                <!-- Menggunakan URL resmi aset Google untuk memastikan ikon muncul -->
                 <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-5 h-5" alt="Google Logo">
                 <span>Masuk dengan Google</span>
             </button>
@@ -68,11 +67,12 @@
         </nav>
 
         <main class="max-w-7xl mx-auto px-4 py-8">
-            <!-- Header Stats & Sorting -->
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4 min-w-[180px]">
-                        <div class="bg-indigo-100 p-2.5 rounded-xl text-indigo-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg></div>
+                        <div class="bg-indigo-100 p-2.5 rounded-xl text-indigo-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        </div>
                         <div>
                             <p class="text-[10px] text-slate-500 uppercase font-black">Total</p>
                             <h2 id="total-entries" class="text-2xl font-black text-slate-800">0</h2>
@@ -89,7 +89,6 @@
                 </div>
             </div>
 
-            <!-- Table Card -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left min-w-[800px]">
@@ -170,8 +169,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlXDVBSJryVlGwtZWYL_BNnh6-7R-SbXk",
@@ -193,35 +192,18 @@
         let currentSortedData = [];
         const idFormatter = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        // Pengurutan State
         const sortSelect = document.getElementById('sort-order');
-        
-        // Listener untuk perubahan menu sort
-        sortSelect.addEventListener('change', () => {
-            sortAndRender();
-        });
+        sortSelect.addEventListener('change', () => sortAndRender());
 
         const handleLogin = async () => {
             const btn = document.getElementById('btn-login');
-            const errorEl = document.getElementById('auth-error-msg');
             btn.disabled = true;
             btn.innerHTML = '<span>Menghubungkan...</span>';
-            errorEl.classList.add('hidden');
-
             try {
                 await signInWithPopup(auth, provider);
             } catch (e) {
                 btn.disabled = false;
-                btn.innerHTML = `
-                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-5 h-5" alt="Google Logo">
-                    <span>Masuk dengan Google</span>
-                `;
-                if (e.code === 'auth/unauthorized-domain') {
-                    errorEl.innerHTML = `<strong>Domain Belum Terdaftar!</strong><br>Buka Firebase Console > Auth > Settings > Authorized Domains, tambahkan: <strong>${window.location.hostname}</strong>`;
-                    errorEl.classList.remove('hidden');
-                } else if (e.code === 'auth/popup-blocked') {
-                    await signInWithRedirect(auth, provider);
-                }
+                btn.innerHTML = `<img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-5 h-5" alt="Google Logo"><span>Masuk dengan Google</span>`;
             }
         };
 
@@ -250,7 +232,7 @@
             onSnapshot(colRef, (snapshot) => {
                 rawData = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 sortAndRender();
-            }, (err) => console.error(err));
+            });
         }
 
         function sortAndRender() {
@@ -258,12 +240,7 @@
             currentSortedData = [...rawData].sort((a, b) => {
                 const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                 const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                
-                if (order === 'desc') {
-                    return timeB - timeA;
-                } else {
-                    return timeA - timeB;
-                }
+                return order === 'desc' ? timeB - timeA : timeA - timeB;
             });
             render(currentSortedData);
         }
@@ -288,14 +265,11 @@
                             <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md uppercase tracking-tighter">${item.class_name}</span>
                             <span class="text-[10px] text-slate-400 font-bold truncate">${item.subject}</span>
                         </div>
-                        ${item.createdAt ? `<p class="text-[9px] text-slate-300 mt-2">Diinput: ${new Date(item.createdAt).toLocaleTimeString('id-ID')}</p>` : ''}
                     </td>
                     <td class="px-6 py-6 align-top">
                         <h4 class="text-sm font-bold text-slate-800 mb-2">${item.topic}</h4>
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <p class="text-xs text-slate-500 leading-relaxed italic">
-                                ${item.notes ? item.notes : '<span class="text-slate-300 font-normal">Tidak ada catatan tambahan.</span>'}
-                            </p>
+                            <p class="text-xs text-slate-500 leading-relaxed italic">${item.notes || '<span class="text-slate-300 font-normal">Tidak ada catatan.</span>'}</p>
                         </div>
                     </td>
                     <td class="px-6 py-6 align-top text-right w-[100px]">
@@ -307,6 +281,13 @@
             `).join('');
         }
 
+        // Fungsi pembantu untuk format tanggal Indonesia (DD/MM/YYYY)
+        const formatTanggalIndo = (dateStr) => {
+            if(!dateStr) return "-";
+            const [y, m, d] = dateStr.split("-");
+            return `${d}/${m}/${y}`;
+        };
+
         window.openModal = () => { 
             document.getElementById('modal').classList.remove('hidden'); 
             document.getElementById('date').value = new Date().toISOString().split('T')[0]; 
@@ -314,17 +295,13 @@
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
         window.toggleExportModal = () => document.getElementById('export-modal').classList.toggle('hidden');
         
-        window.hapus = async (id) => { 
-            if(confirm('Hapus data ini selamanya?')) {
-                await deleteDoc(doc(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries', id));
-            }
-        };
+        window.hapus = async (id) => { if(confirm('Hapus data ini?')) await deleteDoc(doc(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries', id)); };
 
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const mSel = document.getElementById('export-month');
         const ySel = document.getElementById('export-year');
         monthNames.forEach((m, i) => mSel.innerHTML += `<option value="${i}">${m}</option>`);
-        for(let i=new Date().getFullYear()-1; i<=2030; i++) ySel.innerHTML += `<option value="${i}">${i}</option>`;
+        for(let i=new Date().getFullYear()-2; i<=2030; i++) ySel.innerHTML += `<option value="${i}">${i}</option>`;
         mSel.value = new Date().getMonth();
         ySel.value = new Date().getFullYear();
 
@@ -346,10 +323,10 @@
             docPDF.setFontSize(8).setFont(undefined, 'italic').text(`Urutan data: ${orderLabel}`, 105, 32, {align:'center'});
             
             docPDF.autoTable({
-                head: [['No', 'Tanggal Pelaksanaan', 'Kelas', 'Mapel', 'Materi Pokok', 'Catatan']],
+                head: [['No', 'Tgl Pelaksanaan', 'Kelas', 'Mapel', 'Materi Pokok', 'Catatan']],
                 body: filtered.map((it, idx) => [
                     idx+1, 
-                    it.date, 
+                    formatTanggalIndo(it.date), // Menggunakan format Indonesia di sini
                     it.class_name, 
                     it.subject, 
                     it.topic, 
@@ -360,7 +337,7 @@
                 styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: {
                     0: { cellWidth: 10, halign: 'center' },
-                    1: { cellWidth: 35 },
+                    1: { cellWidth: 30, halign: 'center' },
                     2: { cellWidth: 20 },
                     3: { cellWidth: 25 },
                     5: { cellWidth: 45 }
