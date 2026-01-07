@@ -82,8 +82,8 @@
                 <div class="flex items-center space-x-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm self-start md:self-auto">
                     <span class="text-xs font-bold text-slate-400 px-2 uppercase">Urutkan:</span>
                     <select id="sort-order" class="bg-slate-50 text-sm font-bold text-slate-700 p-2 rounded-xl outline-none focus:ring-2 focus:ring-indigo-200 cursor-pointer">
-                        <option value="desc">Terbaru &rarr; Lama</option>
-                        <option value="asc">Lama &rarr; Terbaru</option>
+                        <option value="desc">Terbaru Diinput &rarr; Lama</option>
+                        <option value="asc">Lama Diinput &rarr; Terbaru</option>
                     </select>
                 </div>
             </div>
@@ -170,7 +170,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlXDVBSJryVlGwtZWYL_BNnh6-7R-SbXk",
@@ -243,6 +243,7 @@
         function loadData() {
             if(!user) return;
             const colRef = collection(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries');
+            // Kita tidak menggunakan query filter di sini agar fleksibel melakukan sorting di sisi client
             onSnapshot(colRef, (snapshot) => {
                 rawData = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 sortAndRender();
@@ -251,15 +252,15 @@
 
         function sortAndRender() {
             const order = sortSelect.value;
-            // Melakukan sort pada array rawData yang didapat dari Firebase
+            // Melakukan sort berdasarkan 'createdAt' untuk memastikan urutan berdasarkan waktu input asli
             currentSortedData = [...rawData].sort((a, b) => {
-                const dateA = new Date(a.date).getTime();
-                const dateB = new Date(b.date).getTime();
+                const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                 
                 if (order === 'desc') {
-                    return dateB - dateA;
+                    return timeB - timeA;
                 } else {
-                    return dateA - dateB;
+                    return timeA - timeB;
                 }
             });
             render(currentSortedData);
@@ -285,6 +286,7 @@
                             <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md uppercase tracking-tighter">${item.class_name}</span>
                             <span class="text-[10px] text-slate-400 font-bold truncate">${item.subject}</span>
                         </div>
+                        ${item.createdAt ? `<p class="text-[9px] text-slate-300 mt-2">Diinput: ${new Date(item.createdAt).toLocaleTimeString('id-ID')}</p>` : ''}
                     </td>
                     <td class="px-6 py-6 align-top">
                         <h4 class="text-sm font-bold text-slate-800 mb-2">${item.topic}</h4>
@@ -338,14 +340,14 @@
             if(!filtered.length) return alert("Tidak ada data untuk periode ini.");
 
             const docPDF = new jspdf.jsPDF('p', 'mm', 'a4');
-            const orderLabel = sortSelect.value === 'desc' ? 'Terbaru ke Lama' : 'Lama ke Terbaru';
+            const orderLabel = sortSelect.value === 'desc' ? 'Terbaru Diinput' : 'Lama Diinput';
             
             docPDF.setFontSize(16).setFont(undefined, 'bold').text('LAPORAN JURNAL MENGAJAR GURU', 105, 20, {align:'center'});
             docPDF.setFontSize(10).setFont(undefined, 'normal').text(`Nama: ${user.displayName} | Periode: ${monthNames[m]} ${y}`, 105, 27, {align:'center'});
             docPDF.setFontSize(8).setFont(undefined, 'italic').text(`Urutan data: ${orderLabel}`, 105, 32, {align:'center'});
             
             docPDF.autoTable({
-                head: [['No', 'Tanggal', 'Kelas', 'Mapel', 'Materi Pokok', 'Catatan']],
+                head: [['No', 'Tanggal Pelaksanaan', 'Kelas', 'Mapel', 'Materi Pokok', 'Catatan']],
                 body: filtered.map((it, idx) => [
                     idx+1, 
                     it.date, 
@@ -359,7 +361,7 @@
                 styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: {
                     0: { cellWidth: 10, halign: 'center' },
-                    1: { cellWidth: 25 },
+                    1: { cellWidth: 35 },
                     2: { cellWidth: 20 },
                     3: { cellWidth: 25 },
                     5: { cellWidth: 45 }
@@ -381,7 +383,7 @@
                     subject: document.getElementById('subject').value,
                     topic: document.getElementById('topic').value,
                     notes: document.getElementById('notes').value,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString() // Simpan timestamp input
                 });
                 closeModal(); e.target.reset();
             } catch(err) { alert("Error: " + err.message); }
