@@ -169,7 +169,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -281,7 +281,6 @@
             `).join('');
         }
 
-        // Fungsi pembantu untuk format tanggal Indonesia (DD/MM/YYYY)
         const formatTanggalIndo = (dateStr) => {
             if(!dateStr) return "-";
             const [y, m, d] = dateStr.split("-");
@@ -318,15 +317,17 @@
             const docPDF = new jspdf.jsPDF('p', 'mm', 'a4');
             const orderLabel = sortSelect.value === 'desc' ? 'Terbaru Diinput' : 'Lama Diinput';
             
+            // Header
             docPDF.setFontSize(16).setFont(undefined, 'bold').text('LAPORAN JURNAL MENGAJAR GURU', 105, 20, {align:'center'});
-            docPDF.setFontSize(10).setFont(undefined, 'normal').text(`Nama: ${user.displayName} | Periode: ${monthNames[m]} ${y}`, 105, 27, {align:'center'});
+            docPDF.setFontSize(10).setFont(undefined, 'normal').text(`Periode: ${monthNames[m]} ${y}`, 105, 27, {align:'center'});
             docPDF.setFontSize(8).setFont(undefined, 'italic').text(`Urutan data: ${orderLabel}`, 105, 32, {align:'center'});
             
+            // Table
             docPDF.autoTable({
                 head: [['No', 'Tgl Pelaksanaan', 'Kelas', 'Mapel', 'Materi Pokok', 'Catatan']],
                 body: filtered.map((it, idx) => [
                     idx+1, 
-                    formatTanggalIndo(it.date), // Menggunakan format Indonesia di sini
+                    formatTanggalIndo(it.date),
                     it.class_name, 
                     it.subject, 
                     it.topic, 
@@ -343,6 +344,27 @@
                     5: { cellWidth: 45 }
                 }
             });
+
+            // Tanda Tangan
+            const finalY = docPDF.lastAutoTable.finalY + 15;
+            const pageWidth = docPDF.internal.pageSize.getWidth();
+            const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            docPDF.setFontSize(10).setFont(undefined, 'normal');
+            
+            // Lokasi dan Tanggal di atas area tanda tangan kanan
+            docPDF.text(`...................., ${today}`, pageWidth - 70, finalY);
+
+            // Kolom Tanda Tangan Kiri (Kepala Madrasah)
+            docPDF.text('Mengetahui,', 40, finalY + 7);
+            docPDF.text('Kepala Madrasah', 40, finalY + 12);
+            docPDF.text('( ............................................. )', 40, finalY + 35);
+            docPDF.text('NIP. ........................................', 40, finalY + 40);
+
+            // Kolom Tanda Tangan Kanan (Guru)
+            docPDF.text('Guru Mata Pelajaran,', pageWidth - 70, finalY + 12);
+            docPDF.text(`( ............................................. )`, pageWidth - 70, finalY + 35);
+            docPDF.text('NIP. ........................................', pageWidth - 70, finalY + 40);
             
             docPDF.save(`Jurnal_${monthNames[m]}_${y}.pdf`);
             toggleExportModal();
