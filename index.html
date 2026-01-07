@@ -19,7 +19,7 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white z-[60] flex flex-col items-center justify-center">
         <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-12 w-12 mb-4"></div>
-        <p class="text-slate-600 font-medium">Menyiapkan Sinkronisasi...</p>
+        <p class="text-slate-600 font-medium">Menghubungkan ke Server...</p>
     </div>
 
     <!-- Login Screen -->
@@ -30,16 +30,19 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
             </div>
-            <h2 class="text-2xl font-black text-slate-800 mb-2">Selamat Datang</h2>
-            <p class="text-slate-500 mb-8 text-sm">Masuk dengan akun Google untuk sinkronisasi jurnal di semua perangkat Anda.</p>
-            <button id="btn-login" class="w-full flex items-center justify-center space-x-3 bg-white border border-slate-200 py-3 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm active:scale-95">
+            <h2 class="text-2xl font-black text-slate-800 mb-2 text-center">Jurnal Mengajar</h2>
+            <p class="text-slate-500 mb-8 text-sm text-center">Gunakan akun Google agar data tersimpan aman dan bisa dibuka di HP & Laptop.</p>
+            
+            <button id="btn-login" class="w-full flex items-center justify-center space-x-3 bg-white border border-slate-200 py-3 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm active:scale-95 disabled:opacity-50">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
                 <span>Masuk dengan Google</span>
             </button>
+            
+            <p class="mt-4 text-[10px] text-slate-400">Jika tidak ada respon, pastikan Popup browser tidak diblokir.</p>
         </div>
     </div>
 
-    <!-- App Content (Hidden until login) -->
+    <!-- App Content -->
     <div id="app-content" class="hidden">
         <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
@@ -53,7 +56,7 @@
                     </div>
                     <button onclick="toggleExportModal()" class="bg-indigo-500 hover:bg-indigo-400 p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition">Ekspor</button>
                     <button onclick="openModal()" class="bg-white text-indigo-600 p-2 md:px-4 md:py-2 rounded-lg font-bold hover:bg-indigo-50 transition shadow-md">Tambah</button>
-                    <button id="btn-logout" class="text-indigo-200 hover:text-white transition p-2">
+                    <button id="btn-logout" class="text-indigo-200 hover:text-white transition p-2 ml-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                     </button>
                 </div>
@@ -72,7 +75,7 @@
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
                     <div class="bg-green-100 p-3 rounded-xl text-green-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg></div>
                     <div>
-                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Akun Aktif</p>
+                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Email Sinkron</p>
                         <h2 id="active-account" class="text-sm font-bold text-green-600 truncate max-w-[200px]">Memuat...</h2>
                     </div>
                 </div>
@@ -93,13 +96,13 @@
                     </table>
                 </div>
                 <div id="empty-state" class="hidden p-20 text-center">
-                    <p class="text-slate-500 font-medium">Belum ada jurnal yang tercatat di akun ini.</p>
+                    <p class="text-slate-500 font-medium">Belum ada jurnal yang tercatat.</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modals (Same as before but with minor UI improvements) -->
+    <!-- Modals -->
     <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen bg-slate-900 bg-opacity-80 p-4" onclick="closeModal()">
             <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-lg" onclick="event.stopPropagation()">
@@ -130,7 +133,7 @@
                         <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Catatan</label>
                         <textarea id="notes" rows="3" class="w-full border border-slate-200 p-3 rounded-2xl"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-xl transition active:scale-95">Simpan</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-xl transition active:scale-95">Simpan ke Cloud</button>
                 </form>
             </div>
         </div>
@@ -145,7 +148,7 @@
                         <select id="export-month" class="border p-3 rounded-2xl bg-white"></select>
                         <select id="export-year" class="border p-3 rounded-2xl bg-white"></select>
                     </div>
-                    <button onclick="handleExportPDF()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg">Unduh PDF</button>
+                    <button onclick="handleExportPDF()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg">Unduh Laporan</button>
                 </div>
             </div>
         </div>
@@ -153,22 +156,19 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // KONFIGURASI FIREBASE ANDA
-        // ==========================================
+        // Konfigurasi dari Anda
         const firebaseConfig = {
-  apiKey: "AIzaSyAlXDVBSJryVlGwtZWYL_BNnh6-7R-SbXk",
-  authDomain: "jurnal-guru-f06df.firebaseapp.com",
-  projectId: "jurnal-guru-f06df",
-  storageBucket: "jurnal-guru-f06df.firebasestorage.app",
-  messagingSenderId: "782875410114",
-  appId: "1:782875410114:web:777745840dec5b9c16055b",
-  measurementId: "G-GT043JMH9S"
+            apiKey: "AIzaSyAlXDVBSJryVlGwtZWYL_BNnh6-7R-SbXk",
+            authDomain: "jurnal-guru-f06df.firebaseapp.com",
+            projectId: "jurnal-guru-f06df",
+            storageBucket: "jurnal-guru-f06df.firebasestorage.app",
+            messagingSenderId: "782875410114",
+            appId: "1:782875410114:web:777745840dec5b9c16055b",
+            measurementId: "G-GT043JMH9S"
         };
-        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -179,13 +179,34 @@
         let currentData = [];
         const idFormatter = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        // Auth Logic
-        document.getElementById('btn-login').onclick = () => {
-            signInWithPopup(auth, provider).catch(e => alert("Gagal Login: " + e.message));
+        const handleLogin = async () => {
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true;
+            btn.innerHTML = '<span>Menghubungkan...</span>';
+
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                console.error("Login Error:", e);
+                if (e.code === 'auth/popup-blocked') {
+                    alert("Popup diblokir. Mengalihkan ke halaman login...");
+                    await signInWithRedirect(auth, provider);
+                } else {
+                    alert("Gagal Login: " + e.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Masuk dengan Google</span>';
+                }
+            }
         };
+
+        document.getElementById('btn-login').onclick = handleLogin;
         document.getElementById('btn-logout').onclick = () => {
             if(confirm("Keluar dari akun?")) signOut(auth);
         };
+
+        getRedirectResult(auth).catch((e) => {
+            if(e.code) alert("Gagal mengambil data login: " + e.message);
+        });
 
         onAuthStateChanged(auth, (u) => {
             document.getElementById('loading-overlay').classList.add('hidden');
@@ -194,8 +215,8 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
                 document.getElementById('active-account').textContent = u.email;
-                document.getElementById('user-name').textContent = u.displayName;
-                document.getElementById('user-photo').src = u.photoURL;
+                document.getElementById('user-name').textContent = u.displayName || 'Guru';
+                document.getElementById('user-photo').src = u.photoURL || 'https://via.placeholder.com/150';
                 document.getElementById('user-info').classList.remove('hidden');
                 loadData();
             } else {
@@ -206,12 +227,16 @@
         });
 
         function loadData() {
-            const colRef = collection(db, 'jurnal_guru', user.uid, 'entries');
+            if(!user) return;
+            // Path: /artifacts/{appId}/users/{userId}/{collectionName}
+            const colRef = collection(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries');
             onSnapshot(colRef, (snapshot) => {
                 const data = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 data.sort((a,b) => new Date(b.date) - new Date(a.date));
                 currentData = data;
                 render(data);
+            }, (err) => {
+                console.error("Firestore Error:", err);
             });
         }
 
@@ -230,7 +255,7 @@
                     </td>
                     <td class="px-6 py-5 text-sm text-slate-600">${item.topic}</td>
                     <td class="px-6 py-5 text-right">
-                        <button onclick="hapus('${item.id}')" class="text-red-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="hapus('${item.id}')" class="text-red-400 hover:text-red-600 p-2 md:opacity-0 group-hover:opacity-100 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         </button>
                     </td>
@@ -238,18 +263,16 @@
             `).join('');
         }
 
-        // Global Window Functions
         window.openModal = () => { document.getElementById('modal').classList.remove('hidden'); document.getElementById('date').value = new Date().toISOString().split('T')[0]; };
         window.closeModal = () => document.getElementById('modal').classList.add('hidden');
         window.toggleExportModal = () => document.getElementById('export-modal').classList.toggle('hidden');
-        window.hapus = async (id) => { if(confirm('Hapus selamanya dari Cloud?')) await deleteDoc(doc(db, 'jurnal_guru', user.uid, 'entries', id)); };
+        window.hapus = async (id) => { if(confirm('Hapus selamanya dari Cloud?')) await deleteDoc(doc(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries', id)); };
 
-        // Export & Init Year
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const mSel = document.getElementById('export-month');
         const ySel = document.getElementById('export-year');
         monthNames.forEach((m, i) => mSel.innerHTML += `<option value="${i}">${m}</option>`);
-        for(let i=2025; i<=2030; i++) ySel.innerHTML += `<option value="${i}">${i}</option>`;
+        for(let i=2024; i<=2030; i++) ySel.innerHTML += `<option value="${i}">${i}</option>`;
         mSel.value = new Date().getMonth();
         ySel.value = new Date().getFullYear();
 
@@ -277,7 +300,7 @@
             const btn = e.target.querySelector('button');
             btn.disabled = true; btn.textContent = 'Menyimpan...';
             try {
-                await addDoc(collection(db, 'jurnal_guru', user.uid, 'entries'), {
+                await addDoc(collection(db, 'artifacts', 'jurnal-guru', 'users', user.uid, 'entries'), {
                     date: document.getElementById('date').value,
                     class_name: document.getElementById('class_name').value,
                     subject: document.getElementById('subject').value,
@@ -286,8 +309,8 @@
                     createdAt: new Date().toISOString()
                 });
                 closeModal(); e.target.reset();
-            } catch(err) { alert(err.message); }
-            btn.disabled = false; btn.textContent = 'Simpan';
+            } catch(err) { alert("Gagal menyimpan: " + err.message); }
+            btn.disabled = false; btn.textContent = 'Simpan ke Cloud';
         };
     </script>
 </body>
